@@ -1,0 +1,645 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Alice Wong">
+<title>Modelling in Python — Lecture 6B</title>
+<style>
+  :root{
+    --bg:#0c1220; --bg2:#111a2e; --ink:#e8ecf5; --mut:#9fb0cc; --acc:#ffc857;
+    --acc2:#6ee7ff; --line:#26324d; --card:#141e34;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:400 1.05rem/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+  }
+  a{color:var(--acc2); text-decoration:none; border-bottom:1px solid rgba(110,231,255,.35)}
+  a:hover{color:#fff}
+  .slide{display:none; height:100dvh; overflow-y:auto; overflow-x:hidden;}
+  .slide.active{display:flex;}
+  .wrap{max-width:1120px; width:100%; margin:auto; padding:3.2rem 1.4rem 6.5rem;}
+  .kicker{color:var(--acc); font-weight:700; letter-spacing:.14em; text-transform:uppercase; font-size:.8rem; margin:0 0 .9rem}
+  h1{font-size:clamp(1.9rem,5.2vw,3.4rem); line-height:1.12; margin:.1em 0 .35em; font-weight:800}
+  h2{font-size:clamp(1.45rem,3.6vw,2.3rem); line-height:1.18; margin:0 0 1rem; font-weight:800}
+  .sub{color:var(--mut); font-size:clamp(1rem,2.2vw,1.25rem); max-width:46em}
+  ul.points{margin:0; padding-left:1.15em}
+  ul.points li{margin:.55em 0; max-width:52em}
+  ul.points li::marker{color:var(--acc)}
+  em{font-style:italic; color:#fff}
+  strong{color:var(--acc); font-weight:700}
+  .big{font-size:clamp(1.15rem,2.6vw,1.55rem); line-height:1.45; max-width:34em}
+  .src{margin-top:1.4rem; color:var(--mut); font-size:.85rem; border-top:1px solid var(--line); padding-top:.7rem; max-width:52em}
+  .quote{
+    font-family:Georgia,"Times New Roman",serif; font-size:clamp(1.02rem,2vw,1.3rem);
+    line-height:1.7; max-width:62ch; color:#f2ead8; background:var(--bg2);
+    border-left:4px solid var(--acc); padding:1.2rem 1.5rem; border-radius:0 12px 12px 0;
+  }
+  .quote.small{font-size:clamp(.9rem,1.6vw,1.05rem); line-height:1.6}
+  table.tbl{border-collapse:collapse; margin:.9rem 0; font-size:1rem; min-width:16rem}
+  table.tbl th,table.tbl td{border:1px solid var(--line); padding:.45em .9em; text-align:center}
+  table.tbl th{background:var(--card); color:var(--acc2); font-weight:700}
+  table.tbl td:first-child, table.tbl th:first-child{text-align:left}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; background:#0a0f1c; border:1px solid var(--line); padding:.1em .4em; border-radius:6px; color:var(--acc2); font-size:.95em}
+  /* collapsible detail sections */
+  details.expand{
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    margin:.8rem 0; max-width:52em;
+  }
+  details.expand summary{
+    cursor:pointer; padding:.75rem 1rem; font-weight:700; color:var(--acc2);
+    list-style-position:inside; border-radius:12px;
+  }
+  details.expand summary:hover{background:var(--bg2)}
+  details.expand[open] summary{border-bottom:1px solid var(--line); border-radius:12px 12px 0 0}
+  details.expand .dbody{padding:.9rem 1.2rem 1.1rem; font-size:.97rem; line-height:1.6; color:var(--ink)}
+  details.expand .dbody p{margin:.5em 0}
+  /* visible TODO placeholders */
+  .todo{
+    border:2px dashed var(--acc); background:rgba(255,200,87,.07); color:var(--acc);
+    border-radius:12px; display:flex; align-items:center; justify-content:center;
+    text-align:center; padding:1rem; font-weight:700; line-height:1.5;
+  }
+  .todo.qr{width:min(60vw,15rem); aspect-ratio:1/1; margin:0 auto}
+  .todo.photo{min-height:14rem}
+  /* "before answer" QR card */
+  .qrcard{display:flex; gap:1.1rem; align-items:center; background:var(--card); border:1px solid var(--line);
+          border-left:4px solid var(--acc2); border-radius:0 12px 12px 0; padding:.9rem 1.1rem}
+  .qrcard .qrimg{flex:0 0 auto; width:clamp(8.5rem,12vw,11rem); text-align:center}
+  .qrcard .qrimg img{display:block; width:100%; height:auto; background:#fff; border-radius:8px; image-rendering:pixelated}
+  .qrcard .qrimg .todo{aspect-ratio:1/1; font-size:.8rem; padding:.5rem}
+  .qrcard .qrimg small{display:block; font-size:clamp(.58rem,.74vw,.7rem); color:var(--mut); margin-top:.35rem; white-space:nowrap}
+  .qrcard .kicker{margin:0 0 .35rem; color:var(--acc2)}
+  .qrcard p{margin:.35em 0; font-size:.92rem; line-height:1.45}
+  @media (max-width:520px){ .qrcard{flex-direction:column; align-items:flex-start} .qrcard .qrimg{width:10.5rem} }
+  /* about-me slide */
+  .about{display:grid; grid-template-columns:1.1fr 1fr; gap:1.2rem 2.6rem; align-items:start}
+  .about .kicker{margin:0 0 .7rem}
+  .path{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.9rem}
+  .path li{display:flex; gap:.95rem; align-items:center}
+  .path .logo{flex:0 0 5.8rem; height:4.4rem; background:#fff; border-radius:10px; padding:.35rem;
+              display:flex; align-items:center; justify-content:center}
+  .path .logo.wide{height:2.6rem; padding:.2rem}
+  .path .logo img{display:block; max-width:100%; max-height:100%; object-fit:contain}
+  .path .txt{flex:1; min-width:0; font-size:.97rem; line-height:1.45}
+  .path .txt strong{display:inline}
+  .path img.me{flex:0 0 8rem; width:8rem; height:auto; border-radius:10px; border:1px solid var(--line)}
+  .about .why p{margin:0 0 .8rem; max-width:40em}
+  .about .why figure{margin-top:1rem}
+  @media (max-width:900px){ .about{grid-template-columns:1fr} }
+  @media (max-width:560px){ .path li.research{flex-wrap:wrap} .path li.research .txt{flex-basis:calc(100% - 6.8rem)} .path img.me{flex-basis:auto; width:min(100%,15rem); margin-left:6.75rem} }
+  /* slide 35 photo row: keep it compact so the text-heavy slide fits */
+  .namefigs figure img{max-height:18vh}
+  @media (max-height:760px){ .namefigs figure img{max-height:13vh} }
+  /* "floors" ladder: Python → C → machine code → CPU */
+  .floors{gap:1rem}
+  .floors .floor{display:flex; gap:1rem; align-items:stretch}
+  .floors .floor figure.narrow{flex:0 0 24%; display:flex; flex-direction:column; justify-content:center}
+  .floors .floor figure.wide{flex:1; min-width:0}
+  .floors figure img{max-height:30vh}
+  .floors figure img.code{background:transparent; border-radius:10px; width:auto; height:min(28vh,230px); max-width:100%; max-height:none; object-fit:contain; margin:0 auto}
+  .floors figcaption code{font-size:.85em; padding:0 .25em}
+  @media (max-width:560px){ .floors .floor{flex-direction:column} .floors .floor figure.narrow{flex-basis:auto} }
+  /* callout card */
+  .callout{background:var(--card); border:1px solid var(--line); border-left:4px solid var(--acc2);
+           border-radius:0 12px 12px 0; padding:.85rem 1.1rem; margin-top:1.2rem; max-width:52em}
+  .callout .kicker{margin:0 0 .35rem; color:var(--acc2)}
+  .callout p{margin:.3em 0; font-size:.95rem; line-height:1.5}
+  figure.video.compact{max-width:min(100%, calc(41vh * 16 / 9))}
+  /* embedded video */
+  figure.video{max-width:min(100%, calc(62vh * 16 / 9)); margin:0 auto}
+  figure.video .vid{aspect-ratio:16/9; width:100%}
+  figure.video iframe{display:block; width:100%; height:100%; border:0; border-radius:8px; background:#000}
+  figure.video figcaption{font-size:.9rem; color:var(--ink); line-height:1.5; margin-top:.7rem}
+  figure.video figcaption .srcline{display:block; color:var(--mut); font-size:.8rem; margin-top:.25rem}
+  /* layout with figures */
+  .cols{display:flex; gap:2.4rem; align-items:center}
+  .content{flex:1.25; min-width:0}
+  .figs{flex:1; min-width:0; display:flex; flex-direction:column; gap:1.1rem; justify-content:center}
+  .figs.row{flex-direction:row; flex-wrap:wrap; align-items:flex-start}
+  .figs.row figure{flex:1 1 10rem}
+  figure{margin:0; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:.6rem; }
+  figure img{display:block; width:100%; height:auto; max-height:48vh; object-fit:contain; border-radius:8px; background:#0a0f1c}
+  figure img.diagram{background:#fff; padding:.5rem}
+  figcaption{font-size:.78rem; color:var(--mut); margin-top:.5rem; line-height:1.4}
+  @media (max-width:900px){ .cols{flex-direction:column; align-items:stretch} .figs{order:2} figure img{max-height:38vh} }
+  /* dividers & title */
+  .divider .wrap, .title .wrap{text-align:center}
+  .divider .kicker{font-size:1rem}
+  .divider .fig-solo{max-width:360px; margin:1.6rem auto 0}
+  .title h1{font-size:clamp(2.3rem,6.5vw,4.2rem)}
+  .warn{color:var(--acc); font-weight:800; letter-spacing:.2em}
+  .centerbig .wrap{max-width:900px}
+  /* nav */
+  .nav{position:fixed; right:.9rem; bottom:.8rem; display:flex; gap:.45rem; align-items:center; z-index:50;
+       background:rgba(12,18,32,.82); border:1px solid var(--line); border-radius:999px; padding:.3rem .6rem; backdrop-filter:blur(6px)}
+  .nav button{background:none; border:0; color:var(--ink); font-size:1.5rem; line-height:1; cursor:pointer; padding:.15rem .5rem; border-radius:8px}
+  .nav button:hover{background:var(--card); color:var(--acc)}
+  #ctr{font-size:.85rem; color:var(--mut); min-width:4.2em; text-align:center}
+  .hint{position:fixed; left:.9rem; bottom:1.05rem; font-size:.72rem; color:var(--mut); z-index:50; opacity:.85}
+  @media (max-width:700px){ .hint{display:none} }
+
+  /* ---------- Intro to Python additions (same tokens as the computing deck) ---------- */
+  h3{font-size:clamp(1.05rem,2vw,1.25rem); color:var(--acc2); margin:1.1rem 0 .5rem; font-weight:700}
+  h4{font-size:1rem; color:var(--acc); margin:.8rem 0 .4rem; font-weight:700; letter-spacing:.04em}
+  .wrap > p{max-width:52em}
+  ol.points{margin:0; padding-left:1.4em}
+  ol.points li{margin:.55em 0; max-width:52em}
+  ol.points li::marker{color:var(--acc); font-weight:700}
+
+  /* notebook-style code cells: code on the left, output on the right */
+  .cell{display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:1rem; margin:1rem 0; align-items:start; max-width:100%}
+  .cell.solo{grid-template-columns:minmax(0,1fr); max-width:52em}
+  .cell .lbl{margin:0 0 .3rem; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--mut); font-weight:700}
+  .cell .cout .lbl{color:var(--acc)}
+  pre.code, pre.out{margin:0; background:#0a0f1c; border:1px solid var(--line); border-radius:10px; padding:.75rem 1rem;
+    font:400 .86rem/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace; overflow:auto; max-height:62vh; color:var(--ink)}
+  pre.code code, pre.out code{background:none; border:0; padding:0; color:inherit; font:inherit; white-space:pre}
+  pre.out{border-left:3px solid var(--acc); color:#dfe6f3}
+  pre.code code{counter-reset:ln}
+  pre.code code > span{counter-increment:ln}
+  pre.code code > span::before{content:counter(ln); display:inline-block; width:1.7em; margin-right:.9em; text-align:right; color:#45557a; user-select:none}
+  /* syntax colours (Quarto/Pandoc token classes) */
+  pre.code .co{color:#7f8fab; font-style:italic}
+  pre.code .st, pre.code .ss, pre.code .ch{color:#b5e48c}
+  pre.code .dv, pre.code .fl, pre.code .bn, pre.code .va, pre.code .cn{color:var(--acc)}
+  pre.code .bu, pre.code .fu, pre.code .sc{color:var(--acc2)}
+  pre.code .kw, pre.code .cf, pre.code .im{color:#ff9ecf}
+  img.plot{display:block; width:100%; height:auto; max-height:52vh; object-fit:contain; background:#fff; border-radius:8px; margin-top:.5rem}
+  @media (max-width:900px){ .cell{grid-template-columns:minmax(0,1fr)} }
+
+  /* callout flavours */
+  .callout.caution{border-left-color:var(--acc)} .callout.caution .kicker{color:var(--acc)}
+  .callout.important{border-left-color:#ff8f8f} .callout.important .kicker{color:#ff8f8f}
+  .callout.tip, .callout.note{border-left-color:var(--acc2)}
+  .callout.none{border-left-color:var(--acc)} .callout.none p{font-size:1.1rem}
+  .callout p:last-child{margin-bottom:0}
+
+  /* tabs (replaces Quarto panel-tabset) */
+  .tabs{margin-top:.8rem}
+  .tabbar{display:flex; flex-wrap:wrap; gap:.45rem; margin-bottom:.6rem}
+  .tabbar button{background:var(--card); border:1px solid var(--line); color:var(--ink); border-radius:999px; padding:.35rem .95rem; font:inherit; font-size:.9rem; cursor:pointer}
+  .tabbar button:hover{border-color:var(--acc2)}
+  .tabbar button[aria-selected="true"]{background:var(--acc); border-color:var(--acc); color:#0c1220; font-weight:700}
+  .tabs .panel{display:none} .tabs .panel.on{display:block}
+
+  /* generic grids */
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:1.6rem; max-width:60em}
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:1.4rem}
+  @media (max-width:760px){ .grid2, .grid3{grid-template-columns:1fr} }
+
+  /* welcome slide part cards */
+  .parts{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1rem; margin-top:1.4rem}
+  .pcard{background:var(--card); border:1px solid var(--line); border-top:3px solid var(--acc); border-radius:12px; padding:1rem 1.1rem}
+  .pcard .kicker{margin:0 0 .4rem}
+  .pcard .ptitle{margin:0 0 .6rem; font-weight:700; line-height:1.35}
+  .pcard .ptime{margin:0; color:var(--mut); font-size:.9rem}
+  @media (max-width:900px){ .parts{grid-template-columns:1fr 1fr} }
+  @media (max-width:520px){ .parts{grid-template-columns:1fr} }
+
+  /* Colab basics: mock notebook cells */
+  .nb{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:.8rem .9rem}
+  .nb .nbtitle{margin:0 0 .5rem; font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--mut); font-weight:700}
+  .nbcell{display:flex; gap:.6rem; align-items:flex-start; background:#0a0f1c; border:1px solid var(--line); border-radius:8px; padding:.5rem .7rem; margin:.45rem 0}
+  .nbcell.sel{border-color:var(--acc2); box-shadow:0 0 0 1px var(--acc2) inset}
+  .nbcell .gut{flex:0 0 3.1rem; display:flex; align-items:center; gap:.3rem; color:var(--mut); font:600 .78rem/1.6 ui-monospace,Menlo,Consolas,"DejaVu Sans Mono",monospace}
+  .nbcell .run{width:1.35rem; height:1.35rem; border-radius:50%; border:1.5px solid var(--mut); display:inline-flex; align-items:center; justify-content:center; font-size:.55rem; color:var(--mut); flex:0 0 auto}
+  .nbcell pre{margin:0; font:400 .84rem/1.55 ui-monospace,Menlo,Consolas,"DejaVu Sans Mono",monospace; color:var(--ink); white-space:pre; overflow:auto}
+  .nbcell .c{color:#7f8fab; font-style:italic} .nbcell .s{color:#b5e48c} .nbcell .n{color:var(--acc)} .nbcell .b{color:var(--acc2)}
+  .nbcell.text{background:transparent; border-style:dashed}
+  .nbcell.text .md{font-weight:800; font-size:1.05rem}
+  .nbout{margin:-.15rem 0 .55rem 3.95rem; font:400 .84rem/1.5 ui-monospace,Menlo,Consolas,"DejaVu Sans Mono",monospace; color:#dfe6f3; white-space:pre; border-left:3px solid var(--acc); padding:.15rem .6rem}
+  .nbout.err{color:#ffb3b3; border-left-color:#ff8f8f}
+  .tagline{display:inline-block; font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:#0c1220; background:var(--acc2); border-radius:999px; padding:.05rem .5rem; margin-left:.4rem; font-weight:700; vertical-align:middle}
+  .kbd{display:inline-block; font:600 .82em/1.3 ui-monospace,Menlo,Consolas,monospace; background:#0a0f1c; border:1px solid var(--line); border-bottom-width:2px; border-radius:6px; padding:.05em .4em; color:var(--ink)}
+  .steps{counter-reset:st; list-style:none; padding:0; margin:0}
+  .steps li{counter-increment:st; position:relative; padding-left:2.2rem; margin:.6rem 0}
+  .steps li::before{content:counter(st); position:absolute; left:0; top:.05rem; width:1.5rem; height:1.5rem; border-radius:50%; background:var(--acc); color:#0c1220; font-weight:800; font-size:.85rem; display:flex; align-items:center; justify-content:center}
+  .cols.colab .content{flex:1.15}
+  .cols.colab .figs{flex:1}
+</style>
+
+<style>
+  /* ---------- Lecture 6B additions (same tokens as the Intro to Python deck) ---------- */
+  .divider .wrap > p, .title .wrap > p{margin-left:auto; margin-right:auto}
+  .cell.solo.wide{max-width:100%; margin:.9rem 0 .6rem}
+  .cell .cin{position:relative}
+  .cell .copy{position:absolute; right:0; top:-.25rem; background:var(--card); border:1px solid var(--line); color:var(--acc2);
+              border-radius:999px; padding:.15rem .75rem; font:600 .75rem/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; cursor:pointer}
+  .cell .copy:hover{border-color:var(--acc2); color:#fff}
+  .cell .copy.done{background:var(--acc); border-color:var(--acc); color:#0c1220}
+  pre.code code > span.hl{display:inline-block; min-width:100%; background:rgba(255,200,87,.13); box-shadow:inset 3px 0 0 var(--acc); border-radius:3px}
+  .cell.importcell pre.code{border-color:var(--acc); box-shadow:0 0 0 1px var(--acc)}
+  .cell.importcell .lbl::after{content:" · imports: run first"; color:var(--acc)}
+  .cell.small pre.code{font-size:.78rem; max-height:47vh}
+  .cell.tall pre.code{max-height:50vh}
+  .callout p code{font-size:.88em}
+  ol.points li .cell{margin:.6rem 0 .3rem}
+  ol.points li .gallery{margin:.2rem 0 0; font-size:.92rem; color:var(--mut)}
+  ol.points ul.varpick{margin:.35rem 0 .2rem}
+  ol.points ul.varpick li{margin:.3em 0; font-size:.97rem}
+  /* slide 3 is text-heavy: tighten it on shorter screens (e.g. 720p projectors) so it clears the nav hint */
+  @media (max-height:800px){
+    #activity-2 .wrap{padding-top:1.8rem}
+    #activity-2 h2{margin-bottom:.6rem}
+    #activity-2 .cell.solo.wide{margin:.55rem 0 .35rem}
+    #activity-2 ol.points > li{margin:.4em 0}
+    #activity-2 .callout{margin-top:.8rem}
+  }
+
+  /* greyed-out "optional" slide: every piece of text, code included, in one flat grey */
+  .slide.optional{--grey:#858b96}
+  .slide.optional .wrap, .slide.optional .wrap *{color:var(--grey) !important}
+  .slide.optional ul.points li::marker{color:var(--grey)}
+  .slide.optional pre.code code > span::before{color:#4a5160}
+  .slide.optional code, .slide.optional .cell .copy{border-color:#2a303c}
+  .slide.optional pre.out{border-left-color:var(--grey)}
+  .slide.optional h2 .opt{font-weight:600; white-space:nowrap}
+</style>
+<noscript><style>.slide{display:flex!important; height:auto; min-height:60vh}</style></noscript>
+</head>
+<body>
+
+<section class="slide title"><div class="wrap">
+  <h1>Modelling in Python</h1>
+  <p class="sub" style="margin:0 auto">From Google Form responses to a regression</p>
+  <p class="src" style="border:0; text-align:center">Alice Wong · Lecture 6B</p>
+</div></section>
+
+<!-- Activity instructions (from Intro to Python 2025, slides 42–43) -->
+<section class="slide" id="activity"><div class="wrap">
+  <p class="kicker">Activity · 1/2</p>
+  <h2>Activity time</h2>
+  <p class="big">In groups of 5, choose a group name.</p>
+  <ol class="points">
+    <li>Open Google Colab account (if you don’t already have)</li>
+    <li>Download <code>7001_survey2026.csv</code> from Moodle</li>
+    <li>Put <code>7001_survey2026.csv</code> into your Google Drive home folder</li>
+    <li>Copy and run the code on the following slides in your Colab notebook, in order (Step 0 to the model)</li>
+  </ol>
+  <div class="callout tip">
+    <p class="kicker">Tip</p>
+    <p>Every code block has a <strong>Copy</strong> button. Paste each step into its own code cell and run it before moving on.</p>
+  </div>
+</div></section>
+
+<section class="slide" id="activity-2"><div class="wrap">
+  <p class="kicker">Activity · 2/2</p>
+  <h2>Activity time</h2>
+  <ol class="points" start="5">
+    <li>Explore the dataset and choose your two variables, then visualize them on a seaborn regression plot graph
+      <ul class="points varpick">
+        <li>I will <strong>assign</strong> your group one variable. You can use it as either the input (predictor/independent) variable or the output (predicted/dependent) variable.</li>
+        <li>You can <strong>choose</strong> the other variable freely, but it must have <em>numeric</em> values. For example, not <code>fav_season</code>: we haven’t taught how to adapt linear regression for non-numeric values yet.</li>
+        <li>Do <strong>NOT</strong> use the shoe size and height example from these slides. Choose a different pair of variables.</li>
+      </ul>
+      <div class="cell solo wide"><div class="cin"><p class="lbl">Code</p><button class="copy" type="button" aria-label="Copy this code">Copy</button><pre class="code"><code><span id="plotexample-1"><span class="co"># Regression plot: x = your input (predictor) column, y = your output (predicted) column</span></span>
+<span id="plotexample-2">sns<span class="op">.</span>regplot(data<span class="op">=</span>df, x<span class="op">=</span><span class="st">&#x27;</span><span class="st">shoe_size</span><span class="st">&#x27;</span>, y<span class="op">=</span><span class="st">&#x27;</span><span class="st">height_cm</span><span class="st">&#x27;</span>)</span></code></pre></div></div>
+      <p class="gallery">More plot types and examples: <a class="uri" href="https://seaborn.pydata.org/examples/index.html" target="_blank" rel="noopener">https://seaborn.pydata.org/examples/index.html</a></p>
+    </li>
+    <li>Run a regression on the variables you chose.</li>
+    <li>Show the summary of the regression. If you don’t remember how to report the important information from a linear regression, revisit the <strong>4A slides</strong>.</li>
+    <li>1 person from each group will present your notebook to the class to see what results they found.</li>
+  </ol>
+  <div class="callout note">
+    <p class="kicker">Worked example</p>
+    <p>The next slides clean the survey and run one regression (height vs. shoe size) from start to finish. Use the same steps for your group’s two variables.</p>
+  </div>
+</div></section>
+
+<section class="slide divider"><div class="wrap">
+  <p class="kicker">Worked example</p>
+  <h1>From survey to model</h1>
+  <p class="sub" style="margin:0 auto">Imports first, then five short cleaning steps, then a 3-line regression</p>
+</div></section>
+
+<!-- Step 0: imports -->
+<section class="slide" id="imports"><div class="wrap">
+  <p class="kicker">Step 0 · Run this first</p>
+  <h2>Imports go at the top</h2>
+  <ul class="points">
+    <li>Put every <code>import</code> in the <strong>first cell</strong> of your notebook, and run it before anything else.</li>
+    <li>Run it again after any restart (<strong>Runtime → Restart session</strong>), because a restart forgets everything.</li>
+    <li>If a later cell says <code>NameError: name 'pd' is not defined</code>, this cell hasn’t been run yet.</li>
+  </ul>
+  <div class="cell solo wide importcell"><div class="cin"><p class="lbl">Code</p><button class="copy" type="button" aria-label="Copy this code">Copy</button><pre class="code"><code><span id="imports-1"><span class="co"># pandas: loads and cleans tables of data (called DataFrames)</span></span>
+<span id="imports-2" class="hl"><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="imports-3"><span class="co"># seaborn: draws statistical plots, including regression plots</span></span>
+<span id="imports-4" class="hl"><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="imports-5"><span class="co"># statsmodels (formula version): fits regressions written as &quot;y ~ x&quot;</span></span>
+<span id="imports-6" class="hl"><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
+<span id="imports-7"><span class="co"># drive: lets Colab open files saved in your Google Drive</span></span>
+<span id="imports-8" class="hl"><span class="im">from</span> google.colab <span class="im">import</span> drive</span></code></pre></div></div>
+</div></section>
+
+<!-- Step 1: load -->
+<section class="slide" id="load"><div class="wrap">
+  <p class="kicker">Step 1 of 5 · Load</p>
+  <h2>Load the responses</h2>
+  <ul class="points">
+    <li>Google Forms exports one row per response and one column per question, plus a <code>Timestamp</code> column.</li>
+    <li>Colab can only open the file once your Drive is connected.</li>
+  </ul>
+  <div class="cell solo wide"><div class="cin"><p class="lbl">Code</p><button class="copy" type="button" aria-label="Copy this code">Copy</button><pre class="code"><code><span id="load-1"><span class="co"># Connect your Google Drive to Colab (a pop-up will ask you to allow access)</span></span>
+<span id="load-2">drive<span class="op">.</span>mount(<span class="st">&#x27;</span><span class="st">/content/drive</span><span class="st">&#x27;</span>)</span>
+<span id="load-3"><span class="co"># Where the survey file is in your Drive (change the name if your file is called something else)</span></span>
+<span id="load-4">file_path <span class="op">=</span> <span class="st">&#x27;</span><span class="st">/content/drive/MyDrive/7001_survey2026.csv</span><span class="st">&#x27;</span></span>
+<span id="load-5"><span class="co"># Read the CSV file into a table (a DataFrame) called df</span></span>
+<span id="load-6">df <span class="op">=</span> pd<span class="op">.</span>read_csv(file_path)</span>
+<span id="load-7"><span class="co"># Show the first 5 rows so you can check the file loaded properly</span></span>
+<span id="load-8">df<span class="op">.</span>head()</span></code></pre></div></div>
+</div></section>
+
+<!-- Step 2: rename -->
+<section class="slide" id="rename"><div class="wrap">
+  <p class="kicker">Step 2 of 5 · Column names</p>
+  <h2>Give every column a short name</h2>
+  <ul class="points">
+    <li>Each column is named after the full question. Short names are easier to type, and the rest of the code uses them.</li>
+    <li>Old names must match the CSV <em>exactly</em>. Check the list printed at the end: a long name left over means a typo.</li>
+  </ul>
+  <div class="cell solo wide small"><div class="cin"><p class="lbl">Code</p><button class="copy" type="button" aria-label="Copy this code">Copy</button><pre class="code"><code><span id="rename-1"><span class="co"># Swap each long question title for a short column name, written as {&#x27;old name&#x27;: &#x27;new name&#x27;}</span></span>
+<span id="rename-2">df <span class="op">=</span> df<span class="op">.</span>rename(columns<span class="op">=</span>{</span>
+<span id="rename-3">    <span class="st">&#x27;</span><span class="st">Timestamp</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">timestamp</span><span class="st">&#x27;</span>,  <span class="co"># date and time each response was submitted</span></span>
+<span id="rename-4">    <span class="st">&#x27;</span><span class="st">Which class section are you in?</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">section</span><span class="st">&#x27;</span>,  <span class="co"># A / B / C / Prefer not to say</span></span>
+<span id="rename-5">    <span class="st">&#x27;</span><span class="st">What is your gender</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">gender</span><span class="st">&#x27;</span>,  <span class="co"># Male / Female / Other / Prefer not to say</span></span>
+<span id="rename-6">    <span class="st">&#x27;</span><span class="st">What is your shoe size? (According to China sizing, see conversion guide here: http://www.shoesizes.co/)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">shoe_size</span><span class="st">&#x27;</span>,  <span class="co"># China sizing</span></span>
+<span id="rename-7">    <span class="st">&#x27;</span><span class="st">When is your birth day? (The day only, from 1-31)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">birth_day</span><span class="st">&#x27;</span>,  <span class="co"># day of the month, 1-31</span></span>
+<span id="rename-8">    <span class="st">&#x27;</span><span class="st">What is your height? (in cm)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">height_cm</span><span class="st">&#x27;</span>,  <span class="co"># centimetres</span></span>
+<span id="rename-9">    <span class="st">&#x27;</span><span class="st">What is your weight? (in kg)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">weight_kg</span><span class="st">&#x27;</span>,  <span class="co"># kilograms (this question was optional)</span></span>
+<span id="rename-10">    <span class="st">&#x27;</span><span class="st">How long does it take to travel from where you live to HKU? (In minutes)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">travel_min</span><span class="st">&#x27;</span>,  <span class="co"># typed as free text</span></span>
+<span id="rename-11">    <span class="st">&#x27;</span><span class="st">What is your age? (in years)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">age</span><span class="st">&#x27;</span>,  <span class="co"># years</span></span>
+<span id="rename-12">    <span class="st">&#x27;</span><span class="st">What is your favorite color? (in RGB values, e.g. 255,0,0. See https://rgbcolorpicker.com/ to find your color)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">fav_color_rgb</span><span class="st">&#x27;</span>,  <span class="co"># e.g. &quot;255,0,0&quot;</span></span>
+<span id="rename-13">    <span class="st">&#x27;</span><span class="st">What is your favorite color? (in words, e.g. Red)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">fav_color_word</span><span class="st">&#x27;</span>,  <span class="co"># e.g. &quot;Red&quot;</span></span>
+<span id="rename-14">    <span class="st">&quot;</span><span class="st">What</span><span class="st">&#x27;</span><span class="st">s your favorite season of the year?</span><span class="st">&quot;</span>: <span class="st">&#x27;</span><span class="st">fav_season</span><span class="st">&#x27;</span>,  <span class="co"># Spring / Summer / Autumn / Winter</span></span>
+<span id="rename-15">    <span class="st">&#x27;</span><span class="st">Are you more of a morning lark (sleep early, wake up early) or a night owl (sleep late, wake up late)?</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">chronotype</span><span class="st">&#x27;</span>,  <span class="co"># Morning lark / Night owl</span></span>
+<span id="rename-16">    <span class="st">&#x27;</span><span class="st">What is your most frequently used AI model?</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">ai_model</span><span class="st">&#x27;</span>,  <span class="co"># free text</span></span>
+<span id="rename-17">    <span class="st">&#x27;</span><span class="st">What is your favourite number?</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">fav_number</span><span class="st">&#x27;</span>,  <span class="co"># free text</span></span>
+<span id="rename-18">    <span class="st">&#x27;</span><span class="st">Type in the most random number you can think of</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">random_number</span><span class="st">&#x27;</span>,  <span class="co"># free text</span></span>
+<span id="rename-19">    <span class="st">&#x27;</span><span class="st">Did you provide false information on any of the previous questions? (If yes, state which question(s) by number)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">false_info</span><span class="st">&#x27;</span>,  <span class="co"># page 2</span></span>
+<span id="rename-20">})  <span class="co"># end of the {old: new} list; rename() now applies it</span></span>
+<span id="rename-21"><span class="co"># List the column names to check that every one was renamed</span></span>
+<span id="rename-22">df<span class="op">.</span>columns</span></code></pre></div></div>
+</div></section>
+
+<!-- Step 3: numbers -->
+<section class="slide" id="numbers"><div class="wrap">
+  <p class="kicker">Step 3 of 5 · Numbers</p>
+  <h2>Make sure numbers are numbers</h2>
+  <ul class="points">
+    <li>The form only accepted numbers for shoe size, birth day, height, weight and age.</li>
+    <li>Travel time, favourite number and random number accepted <em>any</em> text, so answers like “30 mins” or “seven” are possible.</li>
+    <li>Python can’t do maths on text: <code>"30"</code> is not <code>30</code> (remember <code>"1"+"1"</code>?).</li>
+  </ul>
+  <div class="cell solo wide"><div class="cin"><p class="lbl">Code</p><button class="copy" type="button" aria-label="Copy this code">Copy</button><pre class="code"><code><span id="numbers-1"><span class="co"># These answers should all be numbers: make a list of their column names</span></span>
+<span id="numbers-2">num_cols <span class="op">=</span> [<span class="st">&#x27;</span><span class="st">shoe_size</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">birth_day</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">height_cm</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">weight_kg</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">age</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">fav_number</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">random_number</span><span class="st">&#x27;</span>]</span>
+<span id="numbers-3"><span class="co"># Turn each of those columns into numbers; anything that isn&#x27;t a number (e.g. &quot;seven&quot;) becomes NaN (missing)</span></span>
+<span id="numbers-4">df[num_cols] <span class="op">=</span> df[num_cols]<span class="op">.</span>apply(pd<span class="op">.</span>to_numeric, errors<span class="op">=</span><span class="st">&#x27;</span><span class="st">coerce</span><span class="st">&#x27;</span>)</span>
+<span id="numbers-5"><span class="co"># Travel time was free text (e.g. &quot;30 mins&quot;), so pull out the first number in each answer</span></span>
+<span id="numbers-6">df[<span class="st">&#x27;</span><span class="st">travel_min</span><span class="st">&#x27;</span>] <span class="op">=</span> df[<span class="st">&#x27;</span><span class="st">travel_min</span><span class="st">&#x27;</span>]<span class="op">.</span>astype(<span class="bu">str</span>)<span class="op">.</span>str<span class="op">.</span>extract(<span class="st">r</span><span class="st">&#x27;</span><span class="st">(</span><span class="st">\</span><span class="st">d+</span><span class="st">\</span><span class="st">.?</span><span class="st">\</span><span class="st">d*)</span><span class="st">&#x27;</span>, expand<span class="op">=</span><span class="va">False</span>)</span>
+<span id="numbers-7"><span class="co"># Turn that extracted text into numbers (careful: &quot;1 hour&quot; becomes 1, so check these answers by eye)</span></span>
+<span id="numbers-8">df[<span class="st">&#x27;</span><span class="st">travel_min</span><span class="st">&#x27;</span>] <span class="op">=</span> pd<span class="op">.</span>to_numeric(df[<span class="st">&#x27;</span><span class="st">travel_min</span><span class="st">&#x27;</span>], errors<span class="op">=</span><span class="st">&#x27;</span><span class="st">coerce</span><span class="st">&#x27;</span>)</span></code></pre></div></div>
+</div></section>
+
+<!-- Step 4: text -->
+<section class="slide optional" id="text"><div class="wrap">
+  <p class="kicker">Step 4 of 5 · Text</p>
+  <h2>Make text answers consistent <span class="opt">(optional for today)</span></h2>
+  <ul class="points">
+    <li>To Python, <code>"ChatGPT"</code>, <code>"chatgpt"</code> and <code>"chatgpt "</code> are three different answers.</li>
+    <li>The RGB question was free text, so answers come in many shapes (<code>"146, 208, 232"</code>, <code>"255 0 0"</code>, even <code>"blue"</code>). Pulling out the three numbers gives three number columns you can actually use; anything that isn’t three numbers becomes missing instead of crashing the cell.</li>
+  </ul>
+  <div class="cell solo wide"><div class="cin"><p class="lbl">Code</p><button class="copy" type="button" aria-label="Copy this code">Copy</button><pre class="code"><code><span id="text-1"><span class="co"># Remove spaces at the start and end, and make AI model names lower case (&quot;ChatGPT &quot; becomes &quot;chatgpt&quot;)</span></span>
+<span id="text-2">df[<span class="st">&#x27;</span><span class="st">ai_model</span><span class="st">&#x27;</span>] <span class="op">=</span> df[<span class="st">&#x27;</span><span class="st">ai_model</span><span class="st">&#x27;</span>]<span class="op">.</span>str<span class="op">.</span>strip()<span class="op">.</span>str<span class="op">.</span>lower()</span>
+<span id="text-3"><span class="co"># Do the same for colour names, so &quot;Blue&quot; and &quot;blue&quot; count as the same answer</span></span>
+<span id="text-4">df[<span class="st">&#x27;</span><span class="st">fav_color_word</span><span class="st">&#x27;</span>] <span class="op">=</span> df[<span class="st">&#x27;</span><span class="st">fav_color_word</span><span class="st">&#x27;</span>]<span class="op">.</span>str<span class="op">.</span>strip()<span class="op">.</span>str<span class="op">.</span>lower()</span>
+<span id="text-5"><span class="co"># Pull the three numbers out of each RGB answer (&quot;146, 208, 232&quot;, &quot;255 0 0&quot;, &quot;rgb(255,0,0)&quot;) into three new columns</span></span>
+<span id="text-6">df[[<span class="st">&#x27;red&#x27;</span>, <span class="st">&#x27;green&#x27;</span>, <span class="st">&#x27;blue&#x27;</span>]] <span class="op">=</span> df[<span class="st">&#x27;fav_color_rgb&#x27;</span>]<span class="op">.</span>str<span class="op">.</span>extract(<span class="st">r&#x27;(\d+)[,\s]+(\d+)[,\s]+(\d+)&#x27;</span>)</span>
+<span id="text-7"><span class="co"># Make them numbers; anything that isn&#x27;t three numbers (blank, &quot;blue&quot;, &quot;#92D0E8&quot;) becomes NaN (missing)</span></span>
+<span id="text-8">df[[<span class="st">&#x27;red&#x27;</span>, <span class="st">&#x27;green&#x27;</span>, <span class="st">&#x27;blue&#x27;</span>]] <span class="op">=</span> df[[<span class="st">&#x27;red&#x27;</span>, <span class="st">&#x27;green&#x27;</span>, <span class="st">&#x27;blue&#x27;</span>]]<span class="op">.</span>apply(pd<span class="op">.</span>to_numeric, errors<span class="op">=</span><span class="st">&#x27;coerce&#x27;</span>)</span></code></pre></div></div>
+</div></section>
+
+<!-- Step 5: check -->
+<section class="slide" id="check"><div class="wrap">
+  <p class="kicker">Step 5 of 5 · Check</p>
+  <h2>Look, then remove impossible or missing values</h2>
+  <ul class="points">
+    <li>Look at the summary <em>before</em> deleting anything: a height of 290 cm is allowed by the form, but is it believable?</li>
+    <li>Every cut-off is a decision that changes the model. Write down what you removed and why.</li>
+  </ul>
+  <div class="cell solo wide"><div class="cin"><p class="lbl">Code</p><button class="copy" type="button" aria-label="Copy this code">Copy</button><pre class="code"><code><span id="check-1"><span class="co"># Print a summary of the two columns we will model: look at the count, min and max for odd values</span></span>
+<span id="check-2"><span class="bu">print</span>(df[[<span class="st">&#x27;</span><span class="st">shoe_size</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">height_cm</span><span class="st">&#x27;</span>]]<span class="op">.</span>describe())</span>
+<span id="check-3"><span class="co"># Keep only believable heights (the form allowed 100-300 cm); the cut-off is your decision, so explain it</span></span>
+<span id="check-4">df <span class="op">=</span> df[df[<span class="st">&#x27;</span><span class="st">height_cm</span><span class="st">&#x27;</span>]<span class="op">.</span>between(<span class="dv">120</span>, <span class="dv">230</span>)]</span>
+<span id="check-5"><span class="co"># Drop any row that has no shoe size, because the model needs both columns</span></span>
+<span id="check-6">df <span class="op">=</span> df<span class="op">.</span>dropna(subset<span class="op">=</span>[<span class="st">&#x27;</span><span class="st">shoe_size</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">height_cm</span><span class="st">&#x27;</span>])</span></code></pre></div></div>
+</div></section>
+
+<!-- Model -->
+<section class="slide" id="model"><div class="wrap">
+  <p class="kicker">The model · 3 lines</p>
+  <h2>Regression: height ~ shoe size</h2>
+  <ul class="points">
+    <li><code>height_cm ~ shoe_size</code> means “predict height from shoe size”: the variable on the left is <em>y</em>, the one on the right is <em>x</em>.</li>
+  </ul>
+  <div class="cell solo wide"><div class="cin"><p class="lbl">Code</p><button class="copy" type="button" aria-label="Copy this code">Copy</button><pre class="code"><code><span id="model-1"><span class="co"># Fit a straight-line regression that predicts height (y) from shoe size (x)</span></span>
+<span id="model-2">model <span class="op">=</span> smf<span class="op">.</span>ols(<span class="st">&#x27;</span><span class="st">height_cm ~ shoe_size</span><span class="st">&#x27;</span>, data<span class="op">=</span>df)<span class="op">.</span>fit()</span>
+<span id="model-3"><span class="co"># Print the results table, including the slope (coef), R-squared and p-values</span></span>
+<span id="model-4"><span class="bu">print</span>(model<span class="op">.</span>summary())</span>
+<span id="model-5"><span class="co"># Plot each person as a dot, with the fitted line and its 95% confidence band</span></span>
+<span id="model-6">sns<span class="op">.</span>regplot(data<span class="op">=</span>df, x<span class="op">=</span><span class="st">&#x27;</span><span class="st">shoe_size</span><span class="st">&#x27;</span>, y<span class="op">=</span><span class="st">&#x27;</span><span class="st">height_cm</span><span class="st">&#x27;</span>)</span></code></pre></div></div>
+  <div class="grid2" style="margin-top:.4rem">
+    <div class="callout note" style="margin-top:0">
+      <p class="kicker">In the summary, find</p>
+      <p><code>coef</code> on the <code>shoe_size</code> row: how many cm taller, on average, per extra shoe size</p>
+      <p><code>R-squared</code>: the share of the variation in height that shoe size explains (0 to 1)</p>
+      <p><code>P&gt;|t|</code>: the p-value for the slope</p>
+    </div>
+    <div class="callout note" style="margin-top:0">
+      <p class="kicker">In the plot, find</p>
+      <p>Each dot is one person. The line is the model’s prediction; the shaded band shows how uncertain that line is.</p>
+      <p>Try your own variables: change the two column names in the formula and in <code>regplot</code>.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- All code -->
+<section class="slide" id="all-code"><div class="wrap">
+  <p class="kicker">Everything in one place</p>
+  <h2>The whole notebook</h2>
+  <ul class="points">
+    <li>The same code as Steps 0–5 and the model, top to bottom. Imports are at the top.</li>
+  </ul>
+  <div class="cell solo wide small tall"><div class="cin"><p class="lbl">Code</p><button class="copy" type="button" aria-label="Copy this code">Copy</button><pre class="code"><code><span id="all-1"><span class="co"># pandas: loads and cleans tables of data (called DataFrames)</span></span>
+<span id="all-2" class="hl"><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="all-3"><span class="co"># seaborn: draws statistical plots, including regression plots</span></span>
+<span id="all-4" class="hl"><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="all-5"><span class="co"># statsmodels (formula version): fits regressions written as &quot;y ~ x&quot;</span></span>
+<span id="all-6" class="hl"><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
+<span id="all-7"><span class="co"># drive: lets Colab open files saved in your Google Drive</span></span>
+<span id="all-8" class="hl"><span class="im">from</span> google.colab <span class="im">import</span> drive</span>
+<span id="all-9"></span>
+<span id="all-10"><span class="co"># Connect your Google Drive to Colab (a pop-up will ask you to allow access)</span></span>
+<span id="all-11">drive<span class="op">.</span>mount(<span class="st">&#x27;</span><span class="st">/content/drive</span><span class="st">&#x27;</span>)</span>
+<span id="all-12"><span class="co"># Where the survey file is in your Drive (change the name if your file is called something else)</span></span>
+<span id="all-13">file_path <span class="op">=</span> <span class="st">&#x27;</span><span class="st">/content/drive/MyDrive/7001_survey2026.csv</span><span class="st">&#x27;</span></span>
+<span id="all-14"><span class="co"># Read the CSV file into a table (a DataFrame) called df</span></span>
+<span id="all-15">df <span class="op">=</span> pd<span class="op">.</span>read_csv(file_path)</span>
+<span id="all-16"><span class="co"># Show the first 5 rows so you can check the file loaded properly</span></span>
+<span id="all-17">df<span class="op">.</span>head()</span>
+<span id="all-18"></span>
+<span id="all-19"><span class="co"># Swap each long question title for a short column name, written as {&#x27;old name&#x27;: &#x27;new name&#x27;}</span></span>
+<span id="all-20">df <span class="op">=</span> df<span class="op">.</span>rename(columns<span class="op">=</span>{</span>
+<span id="all-21">    <span class="st">&#x27;</span><span class="st">Timestamp</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">timestamp</span><span class="st">&#x27;</span>,  <span class="co"># date and time each response was submitted</span></span>
+<span id="all-22">    <span class="st">&#x27;</span><span class="st">Which class section are you in?</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">section</span><span class="st">&#x27;</span>,  <span class="co"># A / B / C / Prefer not to say</span></span>
+<span id="all-23">    <span class="st">&#x27;</span><span class="st">What is your gender</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">gender</span><span class="st">&#x27;</span>,  <span class="co"># Male / Female / Other / Prefer not to say</span></span>
+<span id="all-24">    <span class="st">&#x27;</span><span class="st">What is your shoe size? (According to China sizing, see conversion guide here: http://www.shoesizes.co/)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">shoe_size</span><span class="st">&#x27;</span>,  <span class="co"># China sizing</span></span>
+<span id="all-25">    <span class="st">&#x27;</span><span class="st">When is your birth day? (The day only, from 1-31)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">birth_day</span><span class="st">&#x27;</span>,  <span class="co"># day of the month, 1-31</span></span>
+<span id="all-26">    <span class="st">&#x27;</span><span class="st">What is your height? (in cm)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">height_cm</span><span class="st">&#x27;</span>,  <span class="co"># centimetres</span></span>
+<span id="all-27">    <span class="st">&#x27;</span><span class="st">What is your weight? (in kg)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">weight_kg</span><span class="st">&#x27;</span>,  <span class="co"># kilograms (this question was optional)</span></span>
+<span id="all-28">    <span class="st">&#x27;</span><span class="st">How long does it take to travel from where you live to HKU? (In minutes)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">travel_min</span><span class="st">&#x27;</span>,  <span class="co"># typed as free text</span></span>
+<span id="all-29">    <span class="st">&#x27;</span><span class="st">What is your age? (in years)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">age</span><span class="st">&#x27;</span>,  <span class="co"># years</span></span>
+<span id="all-30">    <span class="st">&#x27;</span><span class="st">What is your favorite color? (in RGB values, e.g. 255,0,0. See https://rgbcolorpicker.com/ to find your color)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">fav_color_rgb</span><span class="st">&#x27;</span>,  <span class="co"># e.g. &quot;255,0,0&quot;</span></span>
+<span id="all-31">    <span class="st">&#x27;</span><span class="st">What is your favorite color? (in words, e.g. Red)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">fav_color_word</span><span class="st">&#x27;</span>,  <span class="co"># e.g. &quot;Red&quot;</span></span>
+<span id="all-32">    <span class="st">&quot;</span><span class="st">What</span><span class="st">&#x27;</span><span class="st">s your favorite season of the year?</span><span class="st">&quot;</span>: <span class="st">&#x27;</span><span class="st">fav_season</span><span class="st">&#x27;</span>,  <span class="co"># Spring / Summer / Autumn / Winter</span></span>
+<span id="all-33">    <span class="st">&#x27;</span><span class="st">Are you more of a morning lark (sleep early, wake up early) or a night owl (sleep late, wake up late)?</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">chronotype</span><span class="st">&#x27;</span>,  <span class="co"># Morning lark / Night owl</span></span>
+<span id="all-34">    <span class="st">&#x27;</span><span class="st">What is your most frequently used AI model?</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">ai_model</span><span class="st">&#x27;</span>,  <span class="co"># free text</span></span>
+<span id="all-35">    <span class="st">&#x27;</span><span class="st">What is your favourite number?</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">fav_number</span><span class="st">&#x27;</span>,  <span class="co"># free text</span></span>
+<span id="all-36">    <span class="st">&#x27;</span><span class="st">Type in the most random number you can think of</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">random_number</span><span class="st">&#x27;</span>,  <span class="co"># free text</span></span>
+<span id="all-37">    <span class="st">&#x27;</span><span class="st">Did you provide false information on any of the previous questions? (If yes, state which question(s) by number)</span><span class="st">&#x27;</span>: <span class="st">&#x27;</span><span class="st">false_info</span><span class="st">&#x27;</span>,  <span class="co"># page 2</span></span>
+<span id="all-38">})  <span class="co"># end of the {old: new} list; rename() now applies it</span></span>
+<span id="all-39"><span class="co"># List the column names to check that every one was renamed</span></span>
+<span id="all-40">df<span class="op">.</span>columns</span>
+<span id="all-41"></span>
+<span id="all-42"><span class="co"># These answers should all be numbers: make a list of their column names</span></span>
+<span id="all-43">num_cols <span class="op">=</span> [<span class="st">&#x27;</span><span class="st">shoe_size</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">birth_day</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">height_cm</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">weight_kg</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">age</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">fav_number</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">random_number</span><span class="st">&#x27;</span>]</span>
+<span id="all-44"><span class="co"># Turn each of those columns into numbers; anything that isn&#x27;t a number (e.g. &quot;seven&quot;) becomes NaN (missing)</span></span>
+<span id="all-45">df[num_cols] <span class="op">=</span> df[num_cols]<span class="op">.</span>apply(pd<span class="op">.</span>to_numeric, errors<span class="op">=</span><span class="st">&#x27;</span><span class="st">coerce</span><span class="st">&#x27;</span>)</span>
+<span id="all-46"><span class="co"># Travel time was free text (e.g. &quot;30 mins&quot;), so pull out the first number in each answer</span></span>
+<span id="all-47">df[<span class="st">&#x27;</span><span class="st">travel_min</span><span class="st">&#x27;</span>] <span class="op">=</span> df[<span class="st">&#x27;</span><span class="st">travel_min</span><span class="st">&#x27;</span>]<span class="op">.</span>astype(<span class="bu">str</span>)<span class="op">.</span>str<span class="op">.</span>extract(<span class="st">r</span><span class="st">&#x27;</span><span class="st">(</span><span class="st">\</span><span class="st">d+</span><span class="st">\</span><span class="st">.?</span><span class="st">\</span><span class="st">d*)</span><span class="st">&#x27;</span>, expand<span class="op">=</span><span class="va">False</span>)</span>
+<span id="all-48"><span class="co"># Turn that extracted text into numbers (careful: &quot;1 hour&quot; becomes 1, so check these answers by eye)</span></span>
+<span id="all-49">df[<span class="st">&#x27;</span><span class="st">travel_min</span><span class="st">&#x27;</span>] <span class="op">=</span> pd<span class="op">.</span>to_numeric(df[<span class="st">&#x27;</span><span class="st">travel_min</span><span class="st">&#x27;</span>], errors<span class="op">=</span><span class="st">&#x27;</span><span class="st">coerce</span><span class="st">&#x27;</span>)</span>
+<span id="all-50"></span>
+<span id="all-51"><span class="co"># Remove spaces at the start and end, and make AI model names lower case (&quot;ChatGPT &quot; becomes &quot;chatgpt&quot;)</span></span>
+<span id="all-52">df[<span class="st">&#x27;</span><span class="st">ai_model</span><span class="st">&#x27;</span>] <span class="op">=</span> df[<span class="st">&#x27;</span><span class="st">ai_model</span><span class="st">&#x27;</span>]<span class="op">.</span>str<span class="op">.</span>strip()<span class="op">.</span>str<span class="op">.</span>lower()</span>
+<span id="all-53"><span class="co"># Do the same for colour names, so &quot;Blue&quot; and &quot;blue&quot; count as the same answer</span></span>
+<span id="all-54">df[<span class="st">&#x27;</span><span class="st">fav_color_word</span><span class="st">&#x27;</span>] <span class="op">=</span> df[<span class="st">&#x27;</span><span class="st">fav_color_word</span><span class="st">&#x27;</span>]<span class="op">.</span>str<span class="op">.</span>strip()<span class="op">.</span>str<span class="op">.</span>lower()</span>
+<span id="all-55"><span class="co"># Pull the three numbers out of each RGB answer (&quot;146, 208, 232&quot;, &quot;255 0 0&quot;, &quot;rgb(255,0,0)&quot;) into three new columns</span></span>
+<span id="all-56">df[[<span class="st">&#x27;red&#x27;</span>, <span class="st">&#x27;green&#x27;</span>, <span class="st">&#x27;blue&#x27;</span>]] <span class="op">=</span> df[<span class="st">&#x27;fav_color_rgb&#x27;</span>]<span class="op">.</span>str<span class="op">.</span>extract(<span class="st">r&#x27;(\d+)[,\s]+(\d+)[,\s]+(\d+)&#x27;</span>)</span>
+<span id="all-57"><span class="co"># Make them numbers; anything that isn&#x27;t three numbers (blank, &quot;blue&quot;, &quot;#92D0E8&quot;) becomes NaN (missing)</span></span>
+<span id="all-58">df[[<span class="st">&#x27;red&#x27;</span>, <span class="st">&#x27;green&#x27;</span>, <span class="st">&#x27;blue&#x27;</span>]] <span class="op">=</span> df[[<span class="st">&#x27;red&#x27;</span>, <span class="st">&#x27;green&#x27;</span>, <span class="st">&#x27;blue&#x27;</span>]]<span class="op">.</span>apply(pd<span class="op">.</span>to_numeric, errors<span class="op">=</span><span class="st">&#x27;coerce&#x27;</span>)</span>
+<span id="all-59"></span>
+<span id="all-60"><span class="co"># Print a summary of the two columns we will model: look at the count, min and max for odd values</span></span>
+<span id="all-61"><span class="bu">print</span>(df[[<span class="st">&#x27;</span><span class="st">shoe_size</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">height_cm</span><span class="st">&#x27;</span>]]<span class="op">.</span>describe())</span>
+<span id="all-62"><span class="co"># Keep only believable heights (the form allowed 100-300 cm); the cut-off is your decision, so explain it</span></span>
+<span id="all-63">df <span class="op">=</span> df[df[<span class="st">&#x27;</span><span class="st">height_cm</span><span class="st">&#x27;</span>]<span class="op">.</span>between(<span class="dv">120</span>, <span class="dv">230</span>)]</span>
+<span id="all-64"><span class="co"># Drop any row that has no shoe size, because the model needs both columns</span></span>
+<span id="all-65">df <span class="op">=</span> df<span class="op">.</span>dropna(subset<span class="op">=</span>[<span class="st">&#x27;</span><span class="st">shoe_size</span><span class="st">&#x27;</span>, <span class="st">&#x27;</span><span class="st">height_cm</span><span class="st">&#x27;</span>])</span>
+<span id="all-66"></span>
+<span id="all-67"><span class="co"># Fit a straight-line regression that predicts height (y) from shoe size (x)</span></span>
+<span id="all-68">model <span class="op">=</span> smf<span class="op">.</span>ols(<span class="st">&#x27;</span><span class="st">height_cm ~ shoe_size</span><span class="st">&#x27;</span>, data<span class="op">=</span>df)<span class="op">.</span>fit()</span>
+<span id="all-69"><span class="co"># Print the results table, including the slope (coef), R-squared and p-values</span></span>
+<span id="all-70"><span class="bu">print</span>(model<span class="op">.</span>summary())</span>
+<span id="all-71"><span class="co"># Plot each person as a dot, with the fitted line and its 95% confidence band</span></span>
+<span id="all-72">sns<span class="op">.</span>regplot(data<span class="op">=</span>df, x<span class="op">=</span><span class="st">&#x27;</span><span class="st">shoe_size</span><span class="st">&#x27;</span>, y<span class="op">=</span><span class="st">&#x27;</span><span class="st">height_cm</span><span class="st">&#x27;</span>)</span></code></pre></div></div>
+</div></section>
+
+<section class="slide divider"><div class="wrap"><h1>Happy Exploring!</h1></div></section>
+
+<!-- Navigation -->
+<div class="nav">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span id="ctr">1 / 13</span>
+  <button id="next" aria-label="Next slide">›</button>
+</div>
+<div class="hint">← → keys, swipe, or buttons · link to a slide with #number</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var ctr = document.getElementById('ctr');
+  var idx = 0;
+
+  function go(n){
+    if (n < 0) n = 0;
+    if (n > slides.length - 1) n = slides.length - 1;
+    if (slides[idx]) {
+      slides[idx].classList.remove('active');
+      slides[idx].querySelectorAll('iframe[src*="youtube.com/embed"]').forEach(function(f){
+        try { f.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*'); } catch(e) {}
+      });
+    }
+    idx = n;
+    slides[idx].classList.add('active');
+    slides[idx].scrollTop = 0;
+    ctr.textContent = (idx + 1) + ' / ' + slides.length;
+    try { history.replaceState(null, '', '#' + (idx + 1)); } catch(e) { location.hash = '#' + (idx + 1); }
+  }
+  function next(){ go(idx + 1); }
+  function prev(){ go(idx - 1); }
+
+  // Broken-image fail-safe: hide the whole figure if an image cannot load.
+  document.addEventListener('error', function(e){
+    var t = e.target;
+    if (t && t.tagName === 'IMG') {
+      var f = t.closest ? t.closest('figure') : null;
+      if (f) f.style.display = 'none'; else t.style.display = 'none';
+    }
+  }, true);
+
+  document.getElementById('next').addEventListener('click', next);
+  document.getElementById('prev').addEventListener('click', prev);
+
+  document.addEventListener('keydown', function(e){
+    switch (e.key) {
+      case 'ArrowRight': case 'PageDown': case ' ': e.preventDefault(); next(); break;
+      case 'ArrowLeft':  case 'PageUp':             e.preventDefault(); prev(); break;
+      case 'Home': e.preventDefault(); go(0); break;
+      case 'End':  e.preventDefault(); go(slides.length - 1); break;
+    }
+  });
+
+  var tx = 0, ty = 0;
+  document.addEventListener('touchstart', function(e){
+    tx = e.changedTouches[0].clientX; ty = e.changedTouches[0].clientY;
+  }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    var dx = e.changedTouches[0].clientX - tx;
+    var dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > 1.5 * Math.abs(dy)) { dx < 0 ? next() : prev(); }
+  }, {passive:true});
+
+  function fromHash(){
+    var n = parseInt(location.hash.slice(1), 10);
+    return (!isNaN(n) && n >= 1 && n <= slides.length) ? n - 1 : 0;
+  }
+  window.addEventListener('hashchange', function(){ go(fromHash()); });
+  go(fromHash());
+})();
+</script>
+<script>
+document.addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('.tabbar button') : null;
+  if (!b) return;
+  var tabs = b.closest('.tabs');
+  tabs.querySelectorAll('.tabbar button').forEach(function(x){ x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
+  tabs.querySelectorAll('.panel').forEach(function(p){ p.classList.toggle('on', p.id === b.getAttribute('data-tab')); });
+  b.blur();
+});
+</script>
+
+
+<script>
+document.addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('button.copy') : null;
+  if (!b) return;
+  var text = b.parentElement.querySelector('pre code').innerText;
+  function done(){ b.textContent = 'Copied'; b.classList.add('done'); setTimeout(function(){ b.textContent = 'Copy'; b.classList.remove('done'); }, 1400); }
+  function fallback(){ var t = document.createElement('textarea'); t.value = text; t.style.position = 'fixed'; t.style.opacity = '0';
+    document.body.appendChild(t); t.select(); try { document.execCommand('copy'); done(); } catch(err) {} t.remove(); }
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+  b.blur();
+});
+</script>
+
+</body></html>
